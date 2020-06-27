@@ -3,6 +3,7 @@ import { Image, ScrollView } from 'react-native';
 
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
+
 import Logo from '../../assets/logo-header.png';
 import SearchInput from '../../components/SearchInput';
 
@@ -55,11 +56,51 @@ const Dashboard: React.FC = () => {
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+    navigation.navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
+    // async function loadFoods(): Promise<void> {
+    //   let searchUrl = `/foods`;
+
+    //   if (selectedCategory) {
+    //     searchUrl += `?category=${selectedCategory}`;
+    //   }
+
+    //   if (searchValue) {
+    //     if (!selectedCategory) {
+    //       searchUrl += `?q=${searchValue}`;
+    //     }
+
+    //     searchUrl += `&q=${searchValue}`;
+    //   }
+
+    //   const response = await api.get(searchUrl);
+
+    //   const foodFormatted = response.data.map(
+    //     (food: Food) =>
+    //       ({
+    //         ...food,
+    //         formattedPrice: formatValue(food.price),
+    //       } as Food),
+    //   ) as Food[];
+
+    //   setFoods(foodFormatted);
+    // }
     async function loadFoods(): Promise<void> {
-      // Load Foods from API
+      const { data } = await api.get<Food[]>('foods', {
+        params: {
+          name_like: searchValue,
+          category_like: selectedCategory,
+        },
+      });
+
+      setFoods(
+        data.map(food => ({
+          ...food,
+          formattedPrice: formatValue(food.price),
+        })),
+      );
     }
 
     loadFoods();
@@ -67,14 +108,20 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadCategories(): Promise<void> {
-      // Load categories from API
+      const response = await api.get('/categories');
+      setCategories(response.data);
     }
 
     loadCategories();
   }, []);
 
   function handleSelectCategory(id: number): void {
-    // Select / deselect category
+    if (id === selectedCategory) {
+      setSelectedCategory(undefined);
+
+      return;
+    }
+    setSelectedCategory(id);
   }
 
   return (
